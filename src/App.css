@@ -8,5 +8,28 @@
 }
 
 .screen {
+    outline:none;
     background-color:black;
+}
+
+.continueButton {
+    border: 2px solid rgb(69, 69, 69);
+    background-color: black;
+    color:gray;
+    text-align: center;
+    font-size: 50px;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    left:50%;
+    top: 70%;
+}
+
+.winText {
+    text-align: center;
+    color:white;
+    font-size: 50px;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    left:50%;
+    top: 30%;
 }

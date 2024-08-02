@@ -19,13 +19,28 @@ function App() {
   function handleMessage(message) {
     const requestCode = message.slice(0,4);
     const payload = message.slice(5);
-    const packet = JSON.stringify({time:Date.now(), keys:pressedKeys.current})
+    const packet = JSON.stringify(
+      {time:Date.now(),
+       keys:pressedKeys.current,
+       shouldContinue:shouldContinue.current,
+      });
+    if (shouldContinue.current) {shouldContinue.current = false}
     switch(requestCode) {
-      case 'LDRP': setLanderPos(JSON.parse(payload)); socket.current.sendData(packet,'RNFA'); break;
+      case 'NPKT': handlePacket(payload,packet); break;
       case 'GRND': setGround(JSON.parse(payload)); socket.current.sendData(packet,'RNFA'); break;
       case 'RSET': socket.current.sendData(JSON.stringify(screenParams),'INIT'); break;
       default: console.log(`Server sent invalid message ${message}`);
     }
+  }
+
+  function handlePacket(packet,nextPacket) {
+    packet = JSON.parse(packet);
+    if (packet.isGameScreen !== isGameScreen.current) {
+      isGameScreen.current = packet.isGameScreen;
+      dispText.current = packet.dispText;
+    }
+    setLanderPos(packet.landerPos);
+    socket.current.sendData(nextPacket,'RNFA');
   }
 
   function onKeyDown(e) {
@@ -41,7 +56,11 @@ function App() {
   }
 
   const socket = useRef(null);
+  const shouldContinue = useRef(false);
+  const isGameScreen = useRef(true);
   const pressedKeys = useRef([]);
+  const focusRef = useRef(null);
+  const dispText = useRef('');
   const [landerPos, setLanderPos] = useState([]);
   const [ground,setGround] = useState([]);
   useEffect(() => {
@@ -50,13 +69,32 @@ function App() {
     socket.current = new SocketConnection('ws://localhost:8080');
     socket.current.setHandler(socketHandler);
     socket.current.on('open', () => socket.current.sendData(JSON.stringify(screenParams),'INIT'));
+    focusRef.current.focus();
+  //eslint-disable-next-line
   }, [])
-  const screen = 
-    <svg className='screen' width={screenParams.width} height={screenParams.height} tabIndex='0' onKeyDown={onKeyDown} onKeyUp={onKeyUp}>
-      {genLanderComponent(landerPos)}
-      {genGroundComponent(ground)}
-    </svg>;
-  return screen;
+  const screen = (
+      <svg ref={focusRef} className='screen' width={screenParams.width} height={screenParams.height} tabIndex='0' onKeyDown={onKeyDown} onKeyUp={onKeyUp}>
+        {genLanderComponent(landerPos)}
+        {genGroundComponent(ground)}
+      </svg>
+    );
+  return (
+    <div>
+      {screen}
+      <LoseButton isGameScreen={isGameScreen.current} clickFn={() => {shouldContinue.current=true; focusRef.current.focus()}}/>
+      <WinText isGameScreen={isGameScreen.current} dispText={dispText.current} />
+    </div>
+  );
+}
+
+function LoseButton(props) {
+  if (props.isGameScreen) {return}
+  return <button onClick={props.clickFn} className='continueButton'>Continue</button>
+}
+
+function WinText(props) {
+  if (props.isGameScreen) {return}
+  return <p className='winText'>{props.dispText}</p>
 }
 
 function genLanderComponent(nodes) {

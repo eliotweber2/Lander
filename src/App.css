@@ -33,3 +33,14 @@
     left:50%;
     top: 30%;
 }
+
+.infoPanel {
+    position: absolute;
+    left:0px;
+    top: 0px;
+    color:white;
+}
+
+.fuelText {
+    display: inline;
+}

@@ -39,6 +39,7 @@ function App() {
       isGameScreen.current = packet.isGameScreen;
       dispText.current = packet.dispText;
     }
+    dispInfo.current = packet.dispInfo;
     setLanderPos(packet.landerPos);
     socket.current.sendData(nextPacket,'RNFA');
   }
@@ -60,6 +61,7 @@ function App() {
   const isGameScreen = useRef(true);
   const pressedKeys = useRef([]);
   const focusRef = useRef(null);
+  const dispInfo = useRef({currFuel:0,currMaxFuel:0,currLevel:0});
   const dispText = useRef('');
   const [landerPos, setLanderPos] = useState([]);
   const [ground,setGround] = useState([]);
@@ -83,6 +85,7 @@ function App() {
       {screen}
       <LoseButton isGameScreen={isGameScreen.current} clickFn={() => {shouldContinue.current=true; focusRef.current.focus()}}/>
       <WinText isGameScreen={isGameScreen.current} dispText={dispText.current} />
+      <InfoPanel currFuel={dispInfo.current.currFuel} currMaxFuel={dispInfo.current.currMaxFuel} currLevel={dispInfo.current.currLevel} />
     </div>
   );
 }
@@ -95,6 +98,14 @@ function LoseButton(props) {
 function WinText(props) {
   if (props.isGameScreen) {return}
   return <p className='winText'>{props.dispText}</p>
+}
+
+function InfoPanel(props) {
+  return (<div className='infoPanel'>
+    <p className='fuelText'>Fuel level: </p>
+    <progress value={props.currFuel} max={props.currMaxFuel}/>
+    <p>{'Level: ' + props.currLevel} </p>
+  </div>);
 }
 
 function genLanderComponent(nodes) {
